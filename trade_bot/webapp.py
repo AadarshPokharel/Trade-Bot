@@ -32,7 +32,7 @@ class TradeBotRequestHandler(SimpleHTTPRequestHandler):
                 default_mode = "demo"
             self._send_json(
                 {
-                    "modes": available_modes(),
+                    "modes": available_modes(self._config_path),
                     "default_mode": default_mode,
                     "default_config": self._config_path,
                 }

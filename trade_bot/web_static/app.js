@@ -66,7 +66,7 @@ function renderModeSwitcher() {
     .map((mode) => {
       const activeClass = mode.key === state.currentMode ? "is-active" : "";
       return `
-        <button class="mode-option ${activeClass}" data-mode="${mode.key}" type="button">
+        <button class="mode-option ${activeClass}" data-mode="${mode.key}" data-config-path="${mode.config_path}" type="button">
           <span class="mode-option-title">${mode.label}</span>
           <span class="mode-option-copy">${mode.description}</span>
         </button>
@@ -76,8 +76,8 @@ function renderModeSwitcher() {
 
   elements.modeSwitcher.querySelectorAll("[data-mode]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.currentConfig = null;
       state.currentMode = button.dataset.mode;
+      state.currentConfig = button.dataset.configPath || null;
       renderModeSwitcher();
       loadDashboard();
     });
@@ -152,11 +152,20 @@ function resizeChart() {
 }
 
 function renderMetrics(metrics) {
+  const isLiveSnapshot = Boolean(state.payload?.live_mode);
+  const equityFootnote = isLiveSnapshot
+    ? `Cash Base ${formatMoney(metrics.starting_cash)}`
+    : `Start ${formatMoney(metrics.starting_cash)}`;
+  const cashFootnote = state.payload?.paper_trading
+    ? "Paper account cash"
+    : isLiveSnapshot
+      ? "Live account cash"
+      : "Simulated cash";
   const cards = [
     {
       label: "Ending Equity",
       value: formatMoney(metrics.ending_equity),
-      footnote: `Start ${formatMoney(metrics.starting_cash)}`,
+      footnote: equityFootnote,
     },
     {
       label: "Net PnL",
@@ -172,7 +181,7 @@ function renderMetrics(metrics) {
     {
       label: "Available Cash",
       value: formatMoney(metrics.ending_cash),
-      footnote: "Paper capital",
+      footnote: cashFootnote,
     },
   ];
 

@@ -12,6 +12,7 @@ from urllib.request import Request, urlopen
 
 from trade_bot.config import load_config
 from trade_bot.env import load_dotenv
+from trade_bot.ibkr import build_ibkr_dashboard_payload, run_ibkr_live_trading
 from trade_bot.modes import mode_for_config, mode_label_for_config
 from trade_bot.oanda import build_oanda_dashboard_payload, run_oanda_live_trading
 from trade_bot.models import (
@@ -341,6 +342,8 @@ def build_live_dashboard_payload(config_path: str) -> Dict[str, Any]:
     broker_config = config.get("broker", {})
     if broker_config.get("type") == "oanda":
         return build_oanda_dashboard_payload(config_path)
+    if broker_config.get("type") == "ibkr":
+        return build_ibkr_dashboard_payload(config_path)
 
     market_data_config = config["market_data"]
     mode = mode_for_config(config)
@@ -490,6 +493,12 @@ def run_live_trading(
     config = load_config(config_path)
     if config.get("broker", {}).get("type") == "oanda":
         return run_oanda_live_trading(
+            config_path,
+            iterations=iterations,
+            poll_seconds=poll_seconds,
+        )
+    if config.get("broker", {}).get("type") == "ibkr":
+        return run_ibkr_live_trading(
             config_path,
             iterations=iterations,
             poll_seconds=poll_seconds,

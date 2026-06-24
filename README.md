@@ -22,14 +22,15 @@ live broker adapters for:
 - Browser dashboard with candlestick charts and signal review
 - First live-market integration path via Alpaca for stocks and crypto
 - OANDA integration path for forex
+- IBKR integration path for options, futures, and commodities
 
 ## Trading Modes
 
 The app is now shaped around three clear modes:
 
 - `Demo`: synthetic market data and simulated fills
-- `Paper`: real market data through Alpaca with paper trading
-- `Live`: real market data through Alpaca with real account access
+- `Paper`: broker-backed market data with paper or preview execution
+- `Live`: broker-backed market data with real account access
 
 This separation is important. Real-money trading should never feel ambiguous in
 the UI or config.
@@ -64,6 +65,12 @@ Run one forex cycle with OANDA practice:
 
 ```bash
 python3 -m trade_bot live --config config/oanda_paper.json --iterations 1
+```
+
+Run one IBKR cycle for futures and commodities:
+
+```bash
+python3 -m trade_bot live --config config/ibkr_paper.json --iterations 1
 ```
 
 Run tests:
@@ -147,11 +154,28 @@ The Alpaca paper template lives at `config/alpaca_paper.json`.
 The live Alpaca template lives at `config/alpaca_live.json`.
 The OANDA practice template lives at `config/oanda_paper.json`.
 The OANDA live template lives at `config/oanda_live.json`.
+The IBKR paper template lives at `config/ibkr_paper.json`.
+The IBKR live template lives at `config/ibkr_live.json`.
 
 ## Live trading setup
 
-This repo now includes a first live-market path using Alpaca for stocks, ETFs,
-and crypto.
+This repo now includes broker-backed live or paper-preview paths for multiple
+markets:
+
+- Alpaca for stocks, ETFs, and crypto
+- OANDA for forex
+- IBKR for stocks, forex, options, futures, and commodities
+
+Recommended progression:
+
+1. `config/demo.json`
+2. `config/alpaca_paper.json` or `config/oanda_paper.json` or `config/ibkr_paper.json`
+3. A live broker config with `execute_orders: false`
+4. The same live broker config with `execute_orders: true` only after repeated safe checks
+
+The app will automatically load `.env` and `.env.local` from the repo root.
+
+Alpaca notes:
 
 1. Create an Alpaca account and API keys.
 2. Copy `.env.example` to `.env` and fill in your Alpaca keys.
@@ -162,14 +186,22 @@ and crypto.
 6. Only after successful paper testing should you switch `broker.paper` to
    `false`.
 
-Recommended progression:
+OANDA notes:
 
-1. `config/demo.json`
-2. `config/alpaca_paper.json`
-3. `config/alpaca_live.json` with `execute_orders: false`
-4. `config/alpaca_live.json` with `execute_orders: true`
+- Add `OANDA_API_TOKEN` and `OANDA_ACCOUNT_ID` to `.env`.
+- Start with `config/oanda_paper.json` before switching to `config/oanda_live.json`.
 
-The app will automatically load `.env` and `.env.local` from the repo root.
+IBKR notes:
+
+- The IBKR path expects a local TWS or IB Gateway session with API access enabled.
+- The repo uses `ib_insync` for the IBKR adapter. Install it with:
+
+```bash
+pip install ib-insync
+```
+
+- The included IBKR configs use example futures contracts. You may need to adjust
+  contract months, exchanges, or option details before trading.
 
 You can also point the web dashboard at the live config:
 

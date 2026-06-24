@@ -10,6 +10,9 @@ readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "OpenAI Codex" }]
 
+[project.optional-dependencies]
+ibkr = ["ib-insync>=0.9.86"]
+
 [tool.setuptools]
 packages = ["trade_bot", "trade_bot.brokers", "trade_bot.data", "trade_bot.strategies"]
 

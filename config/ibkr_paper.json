@@ -1,0 +1,49 @@
+{
+  "broker": {
+    "type": "ibkr",
+    "paper": true,
+    "host": "127.0.0.1",
+    "port": 7497,
+    "client_id": 11
+  },
+  "strategy": {
+    "name": "momentum",
+    "short_window": 5,
+    "long_window": 12,
+    "trade_quantity": 1
+  },
+  "risk": {
+    "max_position_size": 3,
+    "max_notional_per_trade": 10000
+  },
+  "market_data": {
+    "type": "ibkr",
+    "bar_size": "1 min",
+    "duration": "2 D",
+    "history_limit": 80,
+    "market_data_type": 1,
+    "use_rth": false,
+    "instruments": [
+      {
+        "symbol": "ES",
+        "asset_class": "future",
+        "sec_type": "FUT",
+        "exchange": "CME",
+        "currency": "USD",
+        "last_trade_date_or_contract_month": "202612"
+      },
+      {
+        "symbol": "GC",
+        "asset_class": "commodity",
+        "sec_type": "FUT",
+        "exchange": "COMEX",
+        "currency": "USD",
+        "last_trade_date_or_contract_month": "202612"
+      }
+    ]
+  },
+  "live": {
+    "execute_orders": false,
+    "poll_seconds": 60
+  }
+}
