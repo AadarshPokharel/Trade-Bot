@@ -12,6 +12,7 @@ from trade_bot.modes import mode_for_config, mode_label_for_config
 from trade_bot.models import AssetClass, Candle, Instrument, OrderRequest, OrderSide, Position, Signal
 from trade_bot.risk import RiskLimits, RiskManager
 from trade_bot.runtime import build_strategy
+from trade_bot.system_status import build_system_status
 
 
 IBKR_PAPER_PORT = 7497
@@ -475,6 +476,13 @@ def build_ibkr_dashboard_payload(config_path: str) -> Dict[str, Any]:
             "fills": client.recent_fills(specs, contracts),
             "decisions": decisions,
             "open_positions": open_positions,
+            "system_status": build_system_status(
+                config,
+                live_mode=True,
+                paper_trading=bool(broker_config.get("paper", True)),
+                execute_orders=bool(config.get("live", {}).get("execute_orders", False)),
+                supports_news=False,
+            ),
             "live_mode": True,
             "execute_orders": bool(config.get("live", {}).get("execute_orders", False)),
         }

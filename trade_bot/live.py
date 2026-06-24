@@ -26,6 +26,7 @@ from trade_bot.models import (
 )
 from trade_bot.risk import RiskLimits, RiskManager
 from trade_bot.runtime import build_strategy
+from trade_bot.system_status import build_system_status
 
 
 ALPACA_PAPER_BASE_URL = "https://paper-api.alpaca.markets"
@@ -597,6 +598,14 @@ def build_live_dashboard_payload(config_path: str) -> Dict[str, Any]:
         "open_positions": open_positions,
         "news": serialized_news,
         "news_error": news_error,
+        "system_status": build_system_status(
+            config,
+            live_mode=True,
+            paper_trading=bool(broker_config.get("paper", True)),
+            execute_orders=bool(config.get("live", {}).get("execute_orders", False)),
+            supports_news=True,
+            news_provider="alpaca",
+        ),
         "live_mode": True,
         "execute_orders": bool(config.get("live", {}).get("execute_orders", False)),
     }

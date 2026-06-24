@@ -8,6 +8,7 @@ from trade_bot.live import build_live_dashboard_payload
 from trade_bot.modes import mode_for_config, mode_label_for_config
 from trade_bot.models import Candle, DecisionTrace, Fill, Position, SimulationResult
 from trade_bot.runtime import build_engine
+from trade_bot.system_status import build_system_status
 
 
 def _to_timestamp(value: datetime) -> int:
@@ -171,4 +172,11 @@ def build_dashboard_payload(config_path: str) -> Dict[str, Any]:
         "open_positions": open_positions,
         "news": [],
         "news_error": "",
+        "system_status": build_system_status(
+            config,
+            live_mode=False,
+            paper_trading=True,
+            execute_orders=False,
+            supports_news=False,
+        ),
     }

@@ -4,6 +4,11 @@ const state = {
   currentMode: "demo",
   currentConfig: null,
   availableModes: [],
+  autoRefreshEnabled: true,
+  autoRefreshSeconds: 30,
+  autoRefreshTimer: null,
+  refreshInFlight: false,
+  lastFetchMs: null,
   chart: null,
   candleSeries: null,
   volumeSeries: null,
@@ -11,6 +16,7 @@ const state = {
 
 const elements = {
   metricGrid: document.getElementById("metric-grid"),
+  statusStrip: document.getElementById("status-strip"),
   modeSwitcher: document.getElementById("mode-switcher"),
   heroEyebrow: document.getElementById("hero-eyebrow"),
   watchlist: document.getElementById("watchlist"),
@@ -25,6 +31,8 @@ const elements = {
   chartCaption: document.getElementById("chart-caption"),
   detailGrid: document.getElementById("detail-grid"),
   refreshButton: document.getElementById("refresh-button"),
+  autoRefreshToggle: document.getElementById("auto-refresh-toggle"),
+  refreshInterval: document.getElementById("refresh-interval"),
   modePill: document.getElementById("mode-pill"),
   chartContainer: document.getElementById("chart"),
 };
@@ -84,6 +92,83 @@ function renderModeSwitcher() {
       loadDashboard();
     });
   });
+}
+
+function refreshStatusLabel() {
+  if (!state.autoRefreshEnabled) {
+    return "Manual refresh";
+  }
+  if (state.refreshInFlight) {
+    return "Refreshing now";
+  }
+  return `Every ${state.autoRefreshSeconds}s`;
+}
+
+function syncRefreshControls() {
+  elements.autoRefreshToggle.checked = state.autoRefreshEnabled;
+  elements.refreshInterval.value = String(state.autoRefreshSeconds);
+  elements.refreshInterval.disabled = !state.autoRefreshEnabled;
+  elements.autoRefreshToggle.disabled = state.refreshInFlight && !state.payload;
+}
+
+function clearAutoRefreshTimer() {
+  if (state.autoRefreshTimer) {
+    window.clearTimeout(state.autoRefreshTimer);
+    state.autoRefreshTimer = null;
+  }
+}
+
+function scheduleAutoRefresh() {
+  clearAutoRefreshTimer();
+  if (!state.autoRefreshEnabled) {
+    return;
+  }
+  state.autoRefreshTimer = window.setTimeout(() => {
+    loadDashboard();
+  }, state.autoRefreshSeconds * 1000);
+}
+
+function renderSystemStatus() {
+  if (!state.payload) {
+    elements.statusStrip.innerHTML = "";
+    return;
+  }
+
+  const status = state.payload.system_status || {};
+  const cards = [
+    {
+      label: "Broker",
+      value: status.broker_label || "Demo Engine",
+      detail: status.market_context || "Market snapshot",
+    },
+    {
+      label: "Execution",
+      value: status.execution_label || "Preview",
+      detail: state.payload.execute_orders ? "Orders may be sent" : "Orders blocked at preview",
+    },
+    {
+      label: "Universe",
+      value: `${status.symbol_count || state.payload.instruments.length} symbols`,
+      detail: status.symbols_preview || "No symbols configured",
+    },
+    {
+      label: "Refresh",
+      value: refreshStatusLabel(),
+      detail: state.lastFetchMs !== null ? `${state.lastFetchMs} ms last fetch` : "Waiting for snapshot",
+    },
+  ];
+
+  elements.statusStrip.innerHTML = cards
+    .map(
+      (card) => `
+        <article class="status-card">
+          <div class="status-label">${card.label}</div>
+          <div class="status-value">${card.value}</div>
+          <div class="status-detail">${card.detail}</div>
+        </article>
+      `
+    )
+    .join("");
 }
 
 function ensureChart() {
@@ -440,6 +525,7 @@ function renderPayload(payload) {
   elements.modePill.textContent = payload.mode_label || (payload.paper_trading ? "Paper Mode" : "Live Mode");
   elements.heroEyebrow.textContent = payload.mode_label || "Trading Dashboard";
   elements.updatedAt.textContent = `Updated ${new Date(payload.generated_at).toLocaleTimeString()}`;
+  renderSystemStatus();
   renderMetrics(payload.metrics);
   renderModeSwitcher();
   renderWatchlist(payload.instruments);
@@ -456,6 +542,14 @@ async function loadModes() {
 }
 
 async function loadDashboard() {
+  if (state.refreshInFlight) {
+    return;
+  }
+  clearAutoRefreshTimer();
+  const requestStartedAt = performance.now();
+  state.refreshInFlight = true;
+  syncRefreshControls();
+  renderSystemStatus();
   elements.refreshButton.disabled = true;
   elements.refreshButton.textContent = "Refreshing...";
   try {
@@ -467,22 +561,40 @@ async function loadDashboard() {
     if (!response.ok) {
       throw new Error(payload.error || "Dashboard request failed.");
     }
+    state.lastFetchMs = Math.round(performance.now() - requestStartedAt);
     renderPayload(payload);
   } catch (error) {
     elements.botThesis.textContent = `Unable to load dashboard data: ${error.message}`;
   } finally {
+    state.refreshInFlight = false;
+    syncRefreshControls();
+    renderSystemStatus();
+    scheduleAutoRefresh();
     elements.refreshButton.disabled = false;
     elements.refreshButton.textContent = "Refresh Snapshot";
   }
 }
 
 elements.refreshButton.addEventListener("click", loadDashboard);
+elements.autoRefreshToggle.addEventListener("change", () => {
+  state.autoRefreshEnabled = elements.autoRefreshToggle.checked;
+  syncRefreshControls();
+  renderSystemStatus();
+  scheduleAutoRefresh();
+});
+elements.refreshInterval.addEventListener("change", () => {
+  state.autoRefreshSeconds = Number.parseInt(elements.refreshInterval.value, 10) || 30;
+  syncRefreshControls();
+  renderSystemStatus();
+  scheduleAutoRefresh();
+});
 window.addEventListener("load", () => {
   const boot = () => {
     if (!window.LightweightCharts) {
       window.setTimeout(boot, 100);
       return;
     }
+    syncRefreshControls();
     loadModes().then(loadDashboard).catch((error) => {
       elements.botThesis.textContent = `Unable to initialize dashboard: ${error.message}`;
     });

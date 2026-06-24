@@ -31,11 +31,25 @@
         </div>
         <div class="hero-actions">
           <div class="mode-pill" id="mode-pill">Paper Mode</div>
-          <button class="refresh-button" id="refresh-button" type="button">
-            Refresh Snapshot
-          </button>
+          <div class="refresh-controls">
+            <button class="refresh-button" id="refresh-button" type="button">
+              Refresh Snapshot
+            </button>
+            <label class="auto-refresh-toggle" for="auto-refresh-toggle">
+              <input id="auto-refresh-toggle" type="checkbox" />
+              <span>Auto-refresh</span>
+            </label>
+            <select class="refresh-interval" id="refresh-interval" aria-label="Refresh interval">
+              <option value="15">15s</option>
+              <option value="30" selected>30s</option>
+              <option value="60">60s</option>
+              <option value="120">120s</option>
+            </select>
+          </div>
         </div>
       </header>
+
+      <section class="status-strip" id="status-strip"></section>
 
       <section class="metric-grid" id="metric-grid"></section>
 

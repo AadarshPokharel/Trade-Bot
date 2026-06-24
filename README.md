@@ -20,6 +20,7 @@ live broker adapters for:
 - Risk manager with configurable guardrails
 - CLI entry point for running simulations
 - Browser dashboard with candlestick charts and signal review
+- Auto-refresh control room status strip for broker mode, execution state, and watched symbols
 - Broker-backed news feed for Alpaca watchlists
 - First live-market integration path via Alpaca for stocks and crypto
 - OANDA integration path for forex
