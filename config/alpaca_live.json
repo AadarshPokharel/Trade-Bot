@@ -1,0 +1,36 @@
+{
+  "broker": {
+    "type": "alpaca",
+    "paper": false
+  },
+  "strategy": {
+    "name": "momentum",
+    "short_window": 3,
+    "long_window": 8,
+    "trade_quantity": 0.001
+  },
+  "risk": {
+    "max_position_size": 1.0,
+    "max_notional_per_trade": 500.0
+  },
+  "market_data": {
+    "type": "alpaca",
+    "history_limit": 60,
+    "stock_feed": "iex",
+    "crypto_loc": "us",
+    "instruments": [
+      {
+        "symbol": "AAPL",
+        "asset_class": "stock"
+      },
+      {
+        "symbol": "BTCUSD",
+        "asset_class": "crypto"
+      }
+    ]
+  },
+  "live": {
+    "execute_orders": false,
+    "poll_seconds": 60
+  }
+}

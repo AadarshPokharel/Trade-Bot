@@ -12,3 +12,6 @@ authors = [{ name = "OpenAI Codex" }]
 
 [tool.setuptools]
 packages = ["trade_bot", "trade_bot.brokers", "trade_bot.data", "trade_bot.strategies"]
+
+[tool.setuptools.package-data]
+trade_bot = ["web_static/*.html", "web_static/*.css", "web_static/*.js"]

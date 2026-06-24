@@ -19,6 +19,19 @@ live broker adapters for:
 - Momentum strategy example
 - Risk manager with configurable guardrails
 - CLI entry point for running simulations
+- Browser dashboard with candlestick charts and signal review
+- First live-market integration path via Alpaca for stocks and crypto
+
+## Trading Modes
+
+The app is now shaped around three clear modes:
+
+- `Demo`: synthetic market data and simulated fills
+- `Paper`: real market data through Alpaca with paper trading
+- `Live`: real market data through Alpaca with real account access
+
+This separation is important. Real-money trading should never feel ambiguous in
+the UI or config.
 
 ## Safety note
 
@@ -32,6 +45,18 @@ Run the built-in demo:
 
 ```bash
 python3 -m trade_bot run --config config/demo.json
+```
+
+Run the web dashboard:
+
+```bash
+python3 -m trade_bot web --config config/demo.json --host 127.0.0.1 --port 8000
+```
+
+Run one live market cycle with Alpaca:
+
+```bash
+python3 -m trade_bot live --config config/alpaca_live.json --iterations 1
 ```
 
 Run tests:
@@ -111,9 +136,40 @@ The demo config lives at `config/demo.json` and shows:
 The default demo uses fractional trade sizes so one configuration can work
 across high-priced assets like Bitcoin and lower-priced ETFs in the same run.
 
+The Alpaca paper template lives at `config/alpaca_paper.json`.
+The live Alpaca template lives at `config/alpaca_live.json`.
+
+## Live trading setup
+
+This repo now includes a first live-market path using Alpaca for stocks, ETFs,
+and crypto.
+
+1. Create an Alpaca account and API keys.
+2. Copy `.env.example` to `.env` and fill in your Alpaca keys.
+3. Start in paper mode with `config/alpaca_paper.json`.
+4. Keep `live.execute_orders` as `false` until you are confident in the
+   signals.
+5. When you are ready, change `live.execute_orders` to `true`.
+6. Only after successful paper testing should you switch `broker.paper` to
+   `false`.
+
+Recommended progression:
+
+1. `config/demo.json`
+2. `config/alpaca_paper.json`
+3. `config/alpaca_live.json` with `execute_orders: false`
+4. `config/alpaca_live.json` with `execute_orders: true`
+
+The app will automatically load `.env` and `.env.local` from the repo root.
+
+You can also point the web dashboard at the live config:
+
+```bash
+python3 -m trade_bot web --config config/alpaca_live.json --host 127.0.0.1 --port 8000
+```
+
 ## Important limitations
 
-- No live execution included yet
 - No historical backtester yet
 - No persistent storage
 - No auth or secret management

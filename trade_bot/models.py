@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 
 class AssetClass(str, Enum):
@@ -25,6 +25,11 @@ class Signal(str, Enum):
 class OrderSide(str, Enum):
     BUY = "buy"
     SELL = "sell"
+
+
+class DecisionStatus(str, Enum):
+    EXECUTED = "executed"
+    REJECTED = "rejected"
 
 
 @dataclass(frozen=True)
@@ -118,6 +123,18 @@ class Portfolio:
 
 
 @dataclass(frozen=True)
+class DecisionTrace:
+    instrument: Instrument
+    signal: Signal
+    status: DecisionStatus
+    timestamp: datetime
+    price: float
+    quantity: float
+    reason: str = ""
+    detail: str = ""
+
+
+@dataclass(frozen=True)
 class SimulationResult:
     starting_cash: float
     ending_cash: float
@@ -125,3 +142,5 @@ class SimulationResult:
     fills: List[Fill]
     open_positions: Dict[str, Position]
     latest_prices: Dict[str, float]
+    decision_trace: List[DecisionTrace] = field(default_factory=list)
+    candle_history: Dict[str, List[Candle]] = field(default_factory=dict)

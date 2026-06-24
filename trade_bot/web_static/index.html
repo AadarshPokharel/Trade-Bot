@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trade Bot Control Room</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <script
+      defer
+      src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"
+    ></script>
+    <script defer src="/app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow" id="hero-eyebrow">Trading Dashboard</p>
+          <h1>Trade Bot Control Room</h1>
+          <p class="hero-copy">
+            A webapp layer for your trading bot with chart analysis, signal
+            review, and paper-trading performance.
+          </p>
+          <div class="mode-switcher" id="mode-switcher"></div>
+        </div>
+        <div class="hero-actions">
+          <div class="mode-pill" id="mode-pill">Paper Mode</div>
+          <button class="refresh-button" id="refresh-button" type="button">
+            Refresh Snapshot
+          </button>
+        </div>
+      </header>
+
+      <section class="metric-grid" id="metric-grid"></section>
+
+      <main class="main-grid">
+        <aside class="panel watchlist-panel">
+          <div class="panel-header">
+            <h2>Watchlist</h2>
+            <span id="updated-at">Loading...</span>
+          </div>
+          <div class="watchlist" id="watchlist"></div>
+          <div class="bot-thesis" id="bot-thesis"></div>
+        </aside>
+
+        <section class="panel chart-panel">
+          <div class="panel-header">
+            <div>
+              <h2 id="chart-symbol">Chart</h2>
+              <p id="chart-caption">Waiting for market data</p>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div id="chart"></div>
+          </div>
+        </section>
+
+        <aside class="panel signal-panel">
+          <div class="panel-header">
+            <h2>Signal Feed</h2>
+            <span id="signal-count">0 signals</span>
+          </div>
+          <div class="signal-feed" id="signal-feed"></div>
+        </aside>
+      </main>
+
+      <section class="lower-grid">
+        <section class="panel detail-panel">
+          <div class="panel-header">
+            <h2>Bot Readout</h2>
+          </div>
+          <div class="detail-grid" id="detail-grid"></div>
+        </section>
+
+        <section class="panel fills-panel">
+          <div class="panel-header">
+            <h2>Recent Fills</h2>
+          </div>
+          <div class="fills-table-wrap">
+            <table class="fills-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Symbol</th>
+                  <th>Side</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                </tr>
+              </thead>
+              <tbody id="fills-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <footer class="footer">
+        Chart rendering powered by
+        <a href="https://www.tradingview.com/lightweight-charts/" target="_blank" rel="noreferrer">
+          TradingView Lightweight Charts
+        </a>
+        .
+      </footer>
+    </div>
+  </body>
+</html>
