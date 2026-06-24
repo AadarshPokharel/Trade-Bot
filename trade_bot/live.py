@@ -50,6 +50,18 @@ class LiveDecisionResult:
     order_id: str = ""
 
 
+@dataclass(frozen=True)
+class LiveNewsItem:
+    headline: str
+    summary: str
+    source: str
+    author: str
+    url: str
+    created_at: datetime
+    related_symbols: List[str]
+    image_url: str = ""
+
+
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -88,6 +100,76 @@ def _instrument_from_config(config: Dict[str, Any]) -> Instrument:
         symbol=config["symbol"],
         asset_class=AssetClass(config["asset_class"]),
     )
+
+
+def _symbol_key(symbol: str) -> str:
+    return symbol.replace("/", "").upper()
+
+
+def _select_news_image(images: List[Dict[str, Any]]) -> str:
+    preferred_sizes = ["thumb", "small", "large"]
+    by_size = {str(image.get("size", "")).lower(): str(image.get("url", "")) for image in images}
+    for size in preferred_sizes:
+        if by_size.get(size):
+            return by_size[size]
+    for image in images:
+        url = str(image.get("url", ""))
+        if url:
+            return url
+    return ""
+
+
+def _normalize_news_item(article: Dict[str, Any]) -> LiveNewsItem:
+    created_at = article.get("created_at") or article.get("updated_at") or _utc_now().isoformat()
+    raw_symbols = article.get("symbols") or []
+    raw_images = article.get("images") or []
+    related_symbols = sorted(
+        {
+            _symbol_key(str(symbol))
+            for symbol in raw_symbols
+            if str(symbol).strip()
+        }
+    )
+    return LiveNewsItem(
+        headline=str(article.get("headline", "")).strip(),
+        summary=str(article.get("summary", "")).strip(),
+        source=str(article.get("source", "")).strip(),
+        author=str(article.get("author", "")).strip(),
+        url=str(article.get("url", "")).strip(),
+        created_at=_parse_timestamp(str(created_at)),
+        related_symbols=related_symbols,
+        image_url=_select_news_image(list(raw_images)),
+    )
+
+
+def _serialize_news_item(article: LiveNewsItem) -> Dict[str, Any]:
+    return {
+        "headline": article.headline,
+        "summary": article.summary,
+        "source": article.source,
+        "author": article.author,
+        "url": article.url,
+        "time": _to_timestamp(article.created_at),
+        "related_symbols": article.related_symbols,
+        "image_url": article.image_url,
+    }
+
+
+def _group_news_by_symbol(
+    instruments: Iterable[Instrument],
+    articles: List[LiveNewsItem],
+    *,
+    per_symbol_limit: int = 5,
+) -> Dict[str, List[Dict[str, Any]]]:
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for instrument in instruments:
+        symbol_key = _symbol_key(instrument.symbol)
+        grouped[instrument.symbol] = [
+            _serialize_news_item(article)
+            for article in articles
+            if symbol_key in article.related_symbols
+        ][:per_symbol_limit]
+    return grouped
 
 
 class AlpacaClient:
@@ -218,6 +300,27 @@ class AlpacaClient:
                 f"Unsupported asset classes: {', '.join(sorted(unsupported))}"
             )
         return history
+
+    def get_news(
+        self,
+        instruments: Iterable[Instrument],
+        *,
+        limit: int = 12,
+    ) -> List[LiveNewsItem]:
+        symbols = sorted({_symbol_key(_alpaca_symbol(item.symbol, item.asset_class)) for item in instruments})
+        if not symbols:
+            return []
+        payload = self._request_json(
+            "GET",
+            self._data_base_url,
+            "/v1beta1/news",
+            params={
+                "symbols": ",".join(symbols),
+                "limit": max(1, min(limit, 50)),
+                "sort": "desc",
+            },
+        )
+        return [_normalize_news_item(article) for article in payload.get("news", [])]
 
     def _fetch_stock_bars(
         self,
@@ -356,6 +459,18 @@ def build_live_dashboard_payload(config_path: str) -> Dict[str, Any]:
     account = client.get_account()
     history_limit = int(market_data_config.get("history_limit", 60))
     bars_by_symbol = client.get_bars(instruments=instruments, limit=history_limit)
+    serialized_news: List[Dict[str, Any]] = []
+    news_by_symbol: Dict[str, List[Dict[str, Any]]] = {instrument.symbol: [] for instrument in instruments}
+    news_error = ""
+    try:
+        news_items = client.get_news(
+            instruments=instruments,
+            limit=int(market_data_config.get("news_limit", 12)),
+        )
+        serialized_news = [_serialize_news_item(article) for article in news_items]
+        news_by_symbol = _group_news_by_symbol(instruments, news_items)
+    except LiveTradingError as error:
+        news_error = str(error)
 
     instrument_payloads: List[Dict[str, Any]] = []
     decisions: List[Dict[str, Any]] = []
@@ -409,6 +524,7 @@ def build_live_dashboard_payload(config_path: str) -> Dict[str, Any]:
                 },
                 "last_signal": last_signal_payload,
                 "analysis_summary": summary,
+                "news": news_by_symbol.get(instrument.symbol, []),
                 "candles": [
                     {
                         "time": _to_timestamp(candle.timestamp),
@@ -479,6 +595,8 @@ def build_live_dashboard_payload(config_path: str) -> Dict[str, Any]:
         "fills": fills[:20],
         "decisions": decisions,
         "open_positions": open_positions,
+        "news": serialized_news,
+        "news_error": news_error,
         "live_mode": True,
         "execute_orders": bool(config.get("live", {}).get("execute_orders", False)),
     }

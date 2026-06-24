@@ -16,6 +16,7 @@
   "market_data": {
     "type": "alpaca",
     "history_limit": 60,
+    "news_limit": 12,
     "stock_feed": "iex",
     "crypto_loc": "us",
     "instruments": [

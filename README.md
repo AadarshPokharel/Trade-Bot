@@ -20,6 +20,7 @@ live broker adapters for:
 - Risk manager with configurable guardrails
 - CLI entry point for running simulations
 - Browser dashboard with candlestick charts and signal review
+- Broker-backed news feed for Alpaca watchlists
 - First live-market integration path via Alpaca for stocks and crypto
 - OANDA integration path for forex
 - IBKR integration path for options, futures, and commodities
@@ -156,6 +157,9 @@ The OANDA practice template lives at `config/oanda_paper.json`.
 The OANDA live template lives at `config/oanda_live.json`.
 The IBKR paper template lives at `config/ibkr_paper.json`.
 The IBKR live template lives at `config/ibkr_live.json`.
+
+For Alpaca-backed dashboards, `market_data.news_limit` controls how many recent
+matching market news articles are requested for the watchlist snapshot.
 
 ## Live trading setup
 

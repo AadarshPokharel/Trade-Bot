@@ -18,6 +18,8 @@ const elements = {
   botThesis: document.getElementById("bot-thesis"),
   signalFeed: document.getElementById("signal-feed"),
   signalCount: document.getElementById("signal-count"),
+  newsFeed: document.getElementById("news-feed"),
+  newsCount: document.getElementById("news-count"),
   fillsTableBody: document.getElementById("fills-table-body"),
   chartSymbol: document.getElementById("chart-symbol"),
   chartCaption: document.getElementById("chart-caption"),
@@ -230,12 +232,13 @@ function renderWatchlist(instruments) {
 function buildMarker(decision) {
   const isBuy = decision.signal === "buy";
   const executed = decision.status === "executed";
+  const preview = decision.status === "preview";
   return {
     time: decision.time,
     position: isBuy ? "belowBar" : "aboveBar",
     color: executed ? (isBuy ? "#2ed47a" : "#ff6b6b") : "#f6ad55",
     shape: executed ? (isBuy ? "arrowUp" : "arrowDown") : "circle",
-    text: executed ? decision.signal.toUpperCase() : "BLOCKED",
+    text: executed ? decision.signal.toUpperCase() : (preview ? "PREVIEW" : "BLOCKED"),
   };
 }
 
@@ -277,7 +280,14 @@ function renderSignalFeed(symbol) {
     ? decisions
         .map((decision) => {
           const directionClass = decision.signal === "buy" ? "tag-buy" : "tag-sell";
-          const statusClass = decision.status === "rejected" ? "tag-rejected" : directionClass;
+          const statusClass = decision.status === "rejected"
+            ? "tag-rejected"
+            : decision.status === "preview"
+              ? "tag-preview"
+              : directionClass;
+          const statusLabel = decision.status === "executed"
+            ? decision.signal.toUpperCase()
+            : decision.status.toUpperCase();
           return `
             <article class="signal-card">
               <div class="signal-topline">
@@ -285,7 +295,7 @@ function renderSignalFeed(symbol) {
                   <div class="signal-symbol">${decision.symbol}</div>
                   <div class="detail-label">${formatTime(decision.time)}</div>
                 </div>
-                <span class="tag ${statusClass}">${decision.status === "executed" ? decision.signal.toUpperCase() : "REJECTED"}</span>
+                <span class="tag ${statusClass}">${statusLabel}</span>
               </div>
               <div class="signal-reason">${decision.reason || "No strategy explanation supplied."}</div>
               ${
@@ -298,6 +308,49 @@ function renderSignalFeed(symbol) {
         })
         .join("")
     : `<article class="signal-card"><div class="signal-reason">No actionable signals yet for ${symbol}.</div></article>`;
+}
+
+function renderNews(symbol) {
+  const instrument = state.payload.instruments.find((candidate) => candidate.symbol === symbol);
+  const articles = instrument?.news || [];
+
+  if (state.payload.news_error) {
+    elements.newsCount.textContent = "news offline";
+    elements.newsFeed.innerHTML = `
+      <article class="news-card">
+        <div class="signal-reason">Unable to load Alpaca news right now: ${state.payload.news_error}</div>
+      </article>
+    `;
+    return;
+  }
+
+  elements.newsCount.textContent = `${articles.length} articles`;
+  elements.newsFeed.innerHTML = articles.length
+    ? articles
+        .map((article) => {
+          const source = article.source ? article.source.toUpperCase() : "NEWS";
+          const image = article.image_url
+            ? `<img class="news-media" src="${article.image_url}" alt="${article.headline}">`
+            : "";
+          const summary = article.summary || "No summary available for this article yet.";
+          const related = article.related_symbols?.length
+            ? `<div class="news-related">${article.related_symbols.join(" · ")}</div>`
+            : "";
+          return `
+            <article class="news-card">
+              ${image}
+              <div class="news-meta">
+                <span>${source}</span>
+                <span>${formatTime(article.time)}</span>
+              </div>
+              <a class="news-link" href="${article.url}" target="_blank" rel="noreferrer">${article.headline}</a>
+              <div class="news-summary">${summary}</div>
+              ${related}
+            </article>
+          `;
+        })
+        .join("")
+    : `<article class="news-card"><div class="signal-reason">No recent Alpaca news matched ${symbol}.</div></article>`;
 }
 
 function renderDetails(instrument) {
@@ -373,6 +426,7 @@ function renderSelectedSymbol() {
 
   renderChart(instrument);
   renderSignalFeed(instrument.symbol);
+  renderNews(instrument.symbol);
   renderDetails(instrument);
   renderFills(instrument.symbol);
 }

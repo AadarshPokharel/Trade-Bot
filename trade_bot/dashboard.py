@@ -169,4 +169,6 @@ def build_dashboard_payload(config_path: str) -> Dict[str, Any]:
         "fills": fills,
         "decisions": decisions,
         "open_positions": open_positions,
+        "news": [],
+        "news_error": "",
     }
