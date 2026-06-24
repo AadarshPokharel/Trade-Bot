@@ -1,0 +1,40 @@
+{
+  "engine": {
+    "starting_cash": 10000.0,
+    "commission_per_trade": 1.0
+  },
+  "strategy": {
+    "name": "momentum",
+    "short_window": 3,
+    "long_window": 6,
+    "trade_quantity": 0.02
+  },
+  "risk": {
+    "max_position_size": 5.0,
+    "max_notional_per_trade": 2500.0
+  },
+  "market_data": {
+    "length": 40,
+    "seed": 7,
+    "instruments": [
+      {
+        "symbol": "BTCUSD",
+        "asset_class": "crypto",
+        "base_price": 68000.0,
+        "volatility": 0.018
+      },
+      {
+        "symbol": "SPY",
+        "asset_class": "etf",
+        "base_price": 540.0,
+        "volatility": 0.008
+      },
+      {
+        "symbol": "XAUUSD",
+        "asset_class": "commodity",
+        "base_price": 2325.0,
+        "volatility": 0.006
+      }
+    ]
+  }
+}
