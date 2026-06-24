@@ -30,7 +30,13 @@ class TradeBotRequestHandler(SimpleHTTPRequestHandler):
                 default_mode = mode_for_config(load_config(self._config_path))
             except Exception:
                 default_mode = "demo"
-            self._send_json({"modes": available_modes(), "default_mode": default_mode})
+            self._send_json(
+                {
+                    "modes": available_modes(),
+                    "default_mode": default_mode,
+                    "default_config": self._config_path,
+                }
+            )
             return
         if parsed.path == "/api/dashboard":
             params = parse_qs(parsed.query)

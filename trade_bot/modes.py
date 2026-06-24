@@ -25,7 +25,7 @@ MODE_PRESETS = {
 
 def mode_for_config(config: Dict[str, Any]) -> str:
     broker = config.get("broker", {})
-    if broker.get("type") == "alpaca":
+    if broker.get("type"):
         return "paper" if bool(broker.get("paper", True)) else "live"
     return "demo"
 

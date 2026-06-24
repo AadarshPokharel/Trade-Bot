@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 from trade_bot.config import load_config
 from trade_bot.env import load_dotenv
 from trade_bot.modes import mode_for_config, mode_label_for_config
+from trade_bot.oanda import build_oanda_dashboard_payload, run_oanda_live_trading
 from trade_bot.models import (
     AssetClass,
     Candle,
@@ -338,6 +339,9 @@ def _position_map(
 def build_live_dashboard_payload(config_path: str) -> Dict[str, Any]:
     config = load_config(config_path)
     broker_config = config.get("broker", {})
+    if broker_config.get("type") == "oanda":
+        return build_oanda_dashboard_payload(config_path)
+
     market_data_config = config["market_data"]
     mode = mode_for_config(config)
     mode_label = mode_label_for_config(config)
@@ -483,8 +487,15 @@ def run_live_trading(
     iterations: int = 0,
     poll_seconds: Optional[int] = None,
 ) -> int:
+    config = load_config(config_path)
+    if config.get("broker", {}).get("type") == "oanda":
+        return run_oanda_live_trading(
+            config_path,
+            iterations=iterations,
+            poll_seconds=poll_seconds,
+        )
+
     try:
-        config = load_config(config_path)
         broker_config = config.get("broker", {})
         market_data_config = config["market_data"]
         live_config = config.get("live", {})

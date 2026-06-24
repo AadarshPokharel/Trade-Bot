@@ -21,6 +21,7 @@ live broker adapters for:
 - CLI entry point for running simulations
 - Browser dashboard with candlestick charts and signal review
 - First live-market integration path via Alpaca for stocks and crypto
+- OANDA integration path for forex
 
 ## Trading Modes
 
@@ -57,6 +58,12 @@ Run one live market cycle with Alpaca:
 
 ```bash
 python3 -m trade_bot live --config config/alpaca_live.json --iterations 1
+```
+
+Run one forex cycle with OANDA practice:
+
+```bash
+python3 -m trade_bot live --config config/oanda_paper.json --iterations 1
 ```
 
 Run tests:
@@ -138,6 +145,8 @@ across high-priced assets like Bitcoin and lower-priced ETFs in the same run.
 
 The Alpaca paper template lives at `config/alpaca_paper.json`.
 The live Alpaca template lives at `config/alpaca_live.json`.
+The OANDA practice template lives at `config/oanda_paper.json`.
+The OANDA live template lives at `config/oanda_live.json`.
 
 ## Live trading setup
 

@@ -14,6 +14,11 @@ class ModeTests(unittest.TestCase):
         self.assertEqual(mode_for_config(config), "paper")
         self.assertEqual(mode_label_for_config(config), "Paper Mode")
 
+    def test_oanda_is_also_treated_as_broker_backed_mode(self) -> None:
+        config = {"broker": {"type": "oanda", "paper": True}, "live": {"execute_orders": False}}
+        self.assertEqual(mode_for_config(config), "paper")
+        self.assertEqual(mode_label_for_config(config), "Paper Mode")
+
     def test_live_preview_label_is_used_when_orders_disabled(self) -> None:
         config = {"broker": {"type": "alpaca", "paper": False}, "live": {"execute_orders": False}}
         self.assertEqual(mode_for_config(config), "live")

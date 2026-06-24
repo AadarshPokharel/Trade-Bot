@@ -2,6 +2,7 @@ const state = {
   payload: null,
   currentSymbol: null,
   currentMode: "demo",
+  currentConfig: null,
   availableModes: [],
   chart: null,
   candleSeries: null,
@@ -75,6 +76,7 @@ function renderModeSwitcher() {
 
   elements.modeSwitcher.querySelectorAll("[data-mode]").forEach((button) => {
     button.addEventListener("click", () => {
+      state.currentConfig = null;
       state.currentMode = button.dataset.mode;
       renderModeSwitcher();
       loadDashboard();
@@ -386,6 +388,7 @@ async function loadModes() {
   const payload = await response.json();
   state.availableModes = payload.modes || [];
   state.currentMode = payload.default_mode || state.currentMode;
+  state.currentConfig = payload.default_config || null;
   renderModeSwitcher();
 }
 
@@ -393,9 +396,10 @@ async function loadDashboard() {
   elements.refreshButton.disabled = true;
   elements.refreshButton.textContent = "Refreshing...";
   try {
-    const response = await fetch(`/api/dashboard?mode=${encodeURIComponent(state.currentMode)}`, {
-      cache: "no-store",
-    });
+    const query = state.currentConfig
+      ? `/api/dashboard?config=${encodeURIComponent(state.currentConfig)}`
+      : `/api/dashboard?mode=${encodeURIComponent(state.currentMode)}`;
+    const response = await fetch(query, { cache: "no-store" });
     const payload = await response.json();
     if (!response.ok) {
       throw new Error(payload.error || "Dashboard request failed.");

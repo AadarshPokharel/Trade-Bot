@@ -98,7 +98,7 @@ def build_dashboard_payload(config_path: str) -> Dict[str, Any]:
     config = load_config(config_path)
     broker_type = config.get("broker", {}).get("type")
     market_data_type = config.get("market_data", {}).get("type")
-    if broker_type == "alpaca" or market_data_type == "alpaca":
+    if broker_type in {"alpaca", "oanda"} or market_data_type in {"alpaca", "oanda"}:
         return build_live_dashboard_payload(config_path)
 
     engine = build_engine(config)

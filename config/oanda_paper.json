@@ -1,0 +1,35 @@
+{
+  "broker": {
+    "type": "oanda",
+    "paper": true
+  },
+  "strategy": {
+    "name": "momentum",
+    "short_window": 5,
+    "long_window": 12,
+    "trade_quantity": 1000
+  },
+  "risk": {
+    "max_position_size": 5000,
+    "max_notional_per_trade": 5000
+  },
+  "market_data": {
+    "type": "oanda",
+    "granularity": "M1",
+    "history_limit": 80,
+    "instruments": [
+      {
+        "symbol": "EURUSD",
+        "asset_class": "forex"
+      },
+      {
+        "symbol": "GBPUSD",
+        "asset_class": "forex"
+      }
+    ]
+  },
+  "live": {
+    "execute_orders": false,
+    "poll_seconds": 60
+  }
+}
